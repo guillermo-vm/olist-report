@@ -1,0 +1,126 @@
+table Calendar
+	lineageTag: 460e8106-8c9d-4e1a-be83-dcc0ba9b6e49
+	dataCategory: Time
+
+	measure 'In transit delivery' = ```
+			CALCULATE(
+			    DISTINCTCOUNT(factSales[order_id]),
+			    factSales[order_status] IN {"approved", "processing", "invoiced", "shipped"}
+			)
+			
+			```
+		formatString: #,0
+		lineageTag: 6c0f7dcc-3120-4fc5-9f43-1fc7e950dc72
+
+	column Date
+		isKey
+		formatString: General Date
+		lineageTag: 2dd8d006-33d5-4b63-b892-901e9cfde3f3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		formatString: 0
+		lineageTag: 0d0ac2ee-78d8-4bba-8695-cc8124b1fad8
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		lineageTag: 19c5b731-0598-40be-bd32-e531b9f00005
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Quarter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		formatString: 0
+		lineageTag: 5955ebe9-6027-436e-9d88-619d346f18e1
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MonthNo]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		lineageTag: 06e136f9-b505-4ceb-a317-1bf92d979150
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month]
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		lineageTag: af9c8672-9423-4663-be47-717719d85b18
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [YearMonth]
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthSort
+		formatString: 0
+		lineageTag: 34bc51e4-e322-41a5-81e4-d1547714d2bf
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [YearMonthSort]
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthDate
+		formatString: General Date
+		lineageTag: a2bb46fa-191c-4410-80d5-a938cf675721
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [YearMonthDate]
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthLabel = FORMAT('Calendar'[Date], "MMM YYYY")
+		lineageTag: 7b51e2b1-5d3f-4f5c-8a04-25870b71ed2b
+		summarizeBy: none
+		sortByColumn: YearMonthSort
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Year Hierarchy'
+		lineageTag: e57836db-7b8c-4f2a-9c80-17e0ae9ff9db
+
+		level Year
+			lineageTag: 852be8e6-616f-4265-8686-ba04ce9d3d2f
+			column: Year
+
+		level Quarter
+			lineageTag: bea46a77-0487-4920-9ef4-d500102fae45
+			column: Quarter
+
+		level MonthNo
+			lineageTag: 04441891-37a4-43cf-9dbd-71b556c45d03
+			column: MonthNo
+
+	partition Calendar = calculated
+		mode: import
+		source =
+				
+				VAR _MinYear = YEAR(MIN(factSales[datetime_purchase]))
+				VAR _MaxYear = YEAR(MAX(factSales[datetime_purchase]))
+				RETURN
+				ADDCOLUMNS(
+				    CALENDAR(DATE(_MinYear, 1, 1), DATE(_MaxYear, 12, 31)),
+				    "Year", YEAR([Date]),
+				    "Quarter", "Q" & FORMAT([Date], "Q"),
+				    "MonthNo", MONTH([Date]),
+				    "Month", FORMAT([Date], "MMM"),
+				    "YearMonth", FORMAT([Date], "YYYY-MM"),
+				    "YearMonthSort", INT(FORMAT([Date], "YYYYMM")),
+				    "YearMonthDate", EOMONTH([Date], -1) + 1  -- First day of the month for smooth continuous X-axes
+				)
+
+	annotation PBI_Id = 031c06197b274eef9309745ac304fdc0
+

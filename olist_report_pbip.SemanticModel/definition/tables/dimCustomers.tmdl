@@ -1,0 +1,144 @@
+table dimCustomers
+	lineageTag: 79e73f43-ad85-4e0d-a779-fe6db756cea3
+
+	column customer_id
+		dataType: string
+		lineageTag: d1121298-65ce-4e02-9f1a-7d4c920de6da
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: 90ff7e6d-d681-44c3-b941-d6c016c6359b
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_zip_code_prefix
+		dataType: string
+		lineageTag: 2e885f52-415e-4e47-a311-7949356e82ff
+		summarizeBy: none
+		sourceColumn: customer_zip_code_prefix
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_city
+		dataType: string
+		lineageTag: 3825f6c7-3f0f-4668-9ed5-fc6fd70b404b
+		summarizeBy: none
+		sourceColumn: customer_city
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_state
+		dataType: string
+		lineageTag: 9e0ed678-afcc-4e7f-81ee-8d3c1723a4b2
+		summarizeBy: none
+		sourceColumn: customer_state
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'dimGeolocation.geolocation_lat'
+		dataType: double
+		lineageTag: e6469d9e-0584-4ff5-ba74-8f148761d43d
+		summarizeBy: none
+		sourceColumn: dimGeolocation.geolocation_lat
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'dimGeolocation.geolocation_lng'
+		dataType: double
+		lineageTag: 2d5574d1-2ebf-4527-ad7e-4eaac9723965
+		summarizeBy: none
+		sourceColumn: dimGeolocation.geolocation_lng
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column customer_state_key
+		dataType: string
+		lineageTag: e79f5b91-385c-4a95-85f6-b8ff7f4b5f43
+		summarizeBy: none
+		sourceColumn: customer_state_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_state_official
+		dataType: string
+		lineageTag: 6089c60c-7e1e-448d-8b93-49286e57a1f7
+		summarizeBy: none
+		sourceColumn: customer_state_official
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Orders' =
+			
+			VAR CurrentPerson = dimCustomers[customer_unique_id]
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT(dimCustomers[customer_id]),
+			        ALLEXCEPT(dimCustomers, dimCustomers[customer_unique_id])
+			    )
+		formatString: #,0
+		lineageTag: 2a5bce48-41d1-4e25-8d83-ab0265323d33
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Frequency Tier' =
+			
+			VAR Orders = dimCustomers[Total Orders]
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        ISBLANK(Orders) || Orders = 0, "0",
+			        Orders = 1, "1",
+			        Orders >= 2 && Orders <= 5, "2-5",
+			        Orders >= 6 && Orders <= 10, "6-10",
+			        Orders > 10 , "10+"
+			    )
+		lineageTag: 0bd01367-05b3-454b-b9f7-d5f22c66ad97
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy location
+		lineageTag: 075033b7-ae8a-4ad4-ad4c-015224e6447e
+
+		level customer_state
+			lineageTag: 1602fc40-07f2-4d59-906d-451087b7db57
+			column: customer_state
+
+		level customer_city
+			lineageTag: ea225d19-8e65-4f0e-949e-b21c35b28977
+			column: customer_city
+
+		level customer_zip_code_prefix
+			lineageTag: e1e37380-6584-4a96-a06e-4dfec966e891
+			column: customer_zip_code_prefix
+
+	partition dimCustomers = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_customers_dataset.csv"),[Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"customer_zip_code_prefix", type text}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type1", {"customer_zip_code_prefix"}, dimGeolocation, {"geolocation_zip_code_prefix"}, "dimGeolocation", JoinKind.LeftOuter),
+				    #"Expanded dimGeolocation" = Table.ExpandTableColumn(#"Merged Queries", "dimGeolocation", {"geolocation_lat", "geolocation_lng"}, {"dimGeolocation.geolocation_lat", "dimGeolocation.geolocation_lng"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Expanded dimGeolocation", {"customer_state"}, brazilan_states, {"state_code"}, "brazilan_states", JoinKind.LeftOuter),
+				    #"Expanded brazilan_states" = Table.ExpandTableColumn(#"Merged Queries1", "brazilan_states", {"map_state_key", "official_state_name"}, {"brazilan_states.map_state_key", "brazilan_states.official_state_name"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Expanded brazilan_states",{{"brazilan_states.map_state_key", "customer_state_key"}, {"brazilan_states.official_state_name", "customer_state_official"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

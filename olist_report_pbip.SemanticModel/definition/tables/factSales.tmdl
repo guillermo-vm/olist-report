@@ -1,0 +1,187 @@
+table factSales
+	lineageTag: d1d8d5cf-c77c-4b41-9005-9d5331754d9b
+
+	column order_id
+		dataType: string
+		lineageTag: 59740755-a702-495f-9d07-e24a5109f9b4
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_item_id
+		dataType: int64
+		formatString: 0
+		lineageTag: f337c9d4-6801-4a1b-9898-c16b2d2d47f7
+		summarizeBy: sum
+		sourceColumn: order_item_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id
+		dataType: string
+		lineageTag: ccdd70d4-87fd-40f4-a59d-9146ae878d99
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_id
+		dataType: string
+		lineageTag: aa253841-1829-4eb2-95b3-40d698f690ce
+		summarizeBy: none
+		sourceColumn: seller_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column shipping_limit_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 271f36ed-dd36-42d5-966d-137773fb9c2a
+		summarizeBy: none
+		sourceColumn: shipping_limit_date
+
+		variation Variation
+			isDefault
+			relationship: 6681eb8b-05c6-4eb6-88bc-e91f086d2f17
+			defaultHierarchy: LocalDateTable_d1aecbf0-3793-4939-9686-a8f746f312fe.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column price
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 9be33643-94f0-41f6-9e6e-5db139402e54
+		summarizeBy: sum
+		sourceColumn: price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column freight_value
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 3380e825-fd6d-4ef1-b6eb-96059eba6ce9
+		summarizeBy: sum
+		sourceColumn: freight_value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'factOrders.customer_id'
+		dataType: string
+		lineageTag: 57a80e4f-f9e4-43ca-871f-124addc7ea2c
+		summarizeBy: none
+		sourceColumn: factOrders.customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_status
+		dataType: string
+		lineageTag: 0346b0f8-e41a-4fb9-85b4-1bac35166e27
+		summarizeBy: none
+		sourceColumn: order_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column datetime_purchase
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 70731a38-ba38-4620-8163-678338a0e889
+		summarizeBy: none
+		sourceColumn: datetime_purchase
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'factOrders.order_approved_at'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: da16bbec-9081-4660-9f05-36eb61f91d03
+		summarizeBy: none
+		sourceColumn: factOrders.order_approved_at
+
+		variation Variation
+			isDefault
+			relationship: c1690233-0896-4321-b280-2556a6fd6f32
+			defaultHierarchy: LocalDateTable_02eadb03-f58f-4579-934c-f8bea58cc9f7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'factOrders.order_delivered_carrier_date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 99b2d888-d58e-4054-a366-9e6b9c862121
+		summarizeBy: none
+		sourceColumn: factOrders.order_delivered_carrier_date
+
+		variation Variation
+			isDefault
+			relationship: bf730dce-6e90-43ad-a48f-8a271e5f0d9b
+			defaultHierarchy: LocalDateTable_6ac14dcd-9143-4a2d-b6a0-31caeca6692c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_delivered_customer
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8311bb94-0873-4a09-8c4f-c8f8124c85e9
+		summarizeBy: none
+		sourceColumn: date_delivered_customer
+
+		variation Variation
+			isDefault
+			relationship: 33c7f841-9ecd-4243-a9c7-873f60241ba3
+			defaultHierarchy: LocalDateTable_3fd9b28c-be62-4945-9568-d7b25a93e325.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_estimated_delivery
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9b7db1ee-ae7b-4087-9431-f1a99845e183
+		summarizeBy: none
+		sourceColumn: date_estimated_delivery
+
+		variation Variation
+			isDefault
+			relationship: 5e92f03e-d5b1-4e8f-b763-521fa9f0aa07
+			defaultHierarchy: LocalDateTable_aceacabc-0e28-4683-a908-9c0ab36eb857.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Local/interstate sell' =
+			
+			IF(
+			    RELATED(dimSellers[seller_state]) = RELATED(dimCustomers[customer_state]),
+			    "Local",
+			    "Inter-State"
+			)
+		lineageTag: 5a427454-50e4-401b-a886-6781565c4420
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition factSales = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_order_items_dataset.csv"),[Delimiter=",", Columns=7, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"order_id", type text}, {"order_item_id", Int64.Type}, {"product_id", type text}, {"seller_id", type text}, {"shipping_limit_date", type datetime}, {"price", Currency.Type}, {"freight_value", Currency.Type}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type", {"order_id"}, factOrders, {"order_id"}, "factOrders", JoinKind.LeftOuter),
+				    #"Expanded factOrders" = Table.ExpandTableColumn(#"Merged Queries", "factOrders", {"customer_id", "order_status", "order_purchase_timestamp", "order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date", "order_estimated_delivery_date"}, {"factOrders.customer_id", "factOrders.order_status", "factOrders.order_purchase_timestamp", "factOrders.order_approved_at", "factOrders.order_delivered_carrier_date", "factOrders.order_delivered_customer_date", "factOrders.order_estimated_delivery_date"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Expanded factOrders",{{"factOrders.order_status", "order_status"}, {"factOrders.order_purchase_timestamp", "date_purchase"}, {"factOrders.order_delivered_customer_date", "date_delivered_customer"}, {"factOrders.order_estimated_delivery_date", "date_estimated_delivery"}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns",{{"date_purchase", type datetime}}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Changed Type1",{{"date_purchase", "datetime_purchase"}}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Renamed Columns1",{{"datetime_purchase", type date}})
+				in
+				    #"Changed Type2"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

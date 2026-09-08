@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "olist_report_pbip"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "0a50e317-22df-4ec9-ba1a-168a53c1bce8"
+  }
+}

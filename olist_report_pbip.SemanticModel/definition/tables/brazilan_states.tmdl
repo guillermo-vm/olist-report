@@ -1,0 +1,54 @@
+table brazilan_states
+	isHidden
+	lineageTag: 55bd073f-8f66-4266-9dcf-1757091b0853
+
+	column state_code
+		dataType: string
+		isHidden
+		lineageTag: 7fdddd48-3f80-45b3-abf2-552ffe5fc18a
+		summarizeBy: none
+		sourceColumn: state_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column map_state_key
+		dataType: string
+		isHidden
+		lineageTag: 5dc3fcf8-a5fd-4d06-b3cc-294d93769604
+		summarizeBy: none
+		sourceColumn: map_state_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column official_state_name
+		dataType: string
+		isHidden
+		lineageTag: 41bffdfe-1b14-49c7-8fa9-f711efba877d
+		summarizeBy: none
+		sourceColumn: official_state_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition brazilan_states = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\brazilan_states.csv"), [Delimiter = ",", Columns = 5, Encoding = 65001, QuoteStyle = QuoteStyle.None]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"Column4", "Column5"}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Columns", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"state_code", type text}, {"map_state_key", type text}, {"official_state_name", type text}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

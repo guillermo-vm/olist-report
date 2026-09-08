@@ -1,0 +1,52 @@
+table supCategoryEnglishName
+	lineageTag: 93e0081e-ed79-438f-967a-ea91bfdae953
+
+	column product_category_name
+		dataType: string
+		lineageTag: 554e14d8-b906-400f-a765-cf7e19a33e01
+		summarizeBy: none
+		sourceColumn: product_category_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_category_name_english
+		dataType: string
+		lineageTag: 93ac00e6-e005-44c3-9864-84aef2d20732
+		summarizeBy: none
+		sourceColumn: product_category_name_english
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Category English'
+		dataType: string
+		lineageTag: 3be01fc7-0d8e-4466-a730-3f01ff8c587f
+		summarizeBy: none
+		sourceColumn: Product Category English
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition supCategoryEnglishName = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\product_category_name_translation.csv"),[Delimiter=",", Columns=2, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"product_category_name", type text}, {"product_category_name_english", type text}}),
+				    #"Inserted Replaced Text" = Table.AddColumn(#"Changed Type1", "Replaced Text", each Text.Replace(Text.Proper([product_category_name_english]), "_", " "), type text),
+				    #"Renamed Columns" = Table.RenameColumns(#"Inserted Replaced Text",{{"Replaced Text", "Product Category English"}})
+				in
+				    #"Renamed Columns"
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

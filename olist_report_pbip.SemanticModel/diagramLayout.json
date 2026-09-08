@@ -1,0 +1,177 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 155.59038160564529
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 339.4270372668816,
+            "y": 765.058359297978
+          },
+          "nodeIndex": "dimCustomers",
+          "nodeLineageTag": "79e73f43-ad85-4e0d-a779-fe6db756cea3",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 12
+        },
+        {
+          "location": {
+            "x": 826.65195706686552,
+            "y": 612.45154355362774
+          },
+          "nodeIndex": "dimProducts",
+          "nodeLineageTag": "f58fbcc3-58bc-4045-b7d5-7b33a3ad3856",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 10
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 281.00642773662219
+          },
+          "nodeIndex": "dimSellers",
+          "nodeLineageTag": "6caa3f6b-3815-40e2-8a26-0d17e6fad806",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 919.38448700262938,
+            "y": 147.57300466701747
+          },
+          "nodeIndex": "factOrderReviews",
+          "nodeLineageTag": "6a4beffb-34c3-40c6-a86f-af3c10c0eb3a",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 375.20156119318528,
+            "y": 265.84469795984535
+          },
+          "nodeIndex": "factSales",
+          "nodeLineageTag": "d1d8d5cf-c77c-4b41-9005-9d5331754d9b",
+          "size": {
+            "height": 302,
+            "width": 456.67463726374535
+          },
+          "zIndex": 11
+        },
+        {
+          "location": {
+            "x": 1017.3525330718126,
+            "y": 939.65956991221515
+          },
+          "nodeIndex": "supCategoryEnglishName",
+          "nodeLineageTag": "93e0081e-ed79-438f-967a-ea91bfdae953",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 0
+          },
+          "nodeIndex": "_measures",
+          "nodeLineageTag": "9518b713-3409-4f04-bb83-1ced9e11edf9",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 1268.3129588442127,
+            "y": 491.02974316619856
+          },
+          "nodeIndex": "Calendar",
+          "nodeLineageTag": "460e8106-8c9d-4e1a-be83-dcc0ba9b6e49",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 61.626349624274155,
+            "y": 881.81137205412654
+          },
+          "nodeIndex": "brazilan_states",
+          "nodeLineageTag": "55bd073f-8f66-4266-9dcf-1757091b0853",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 528.67724702706323
+          },
+          "nodeIndex": "sellerTiers",
+          "nodeLineageTag": "0cbde649-c58d-4f82-a96a-14a41a918dc3",
+          "size": {
+            "height": 171.68932756440563,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 608.897023305078,
+            "y": 0
+          },
+          "nodeIndex": "dimOrders",
+          "nodeLineageTag": "442df5af-8152-4080-94cb-bed4df7c2011",
+          "size": {
+            "height": 201.28532365642232,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 284.01505336439379,
+            "y": 0
+          },
+          "nodeIndex": "dimOrderPayment",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 1
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 70.955543900969047,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

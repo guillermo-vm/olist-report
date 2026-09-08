@@ -1,0 +1,184 @@
+table dimOrderPayment
+	isHidden
+	lineageTag: 8c07a074-ef15-440b-9194-c862e7567009
+
+	column order_id
+		dataType: string
+		isHidden
+		lineageTag: f1ca2c52-ea55-452b-a825-d61b6831d13c
+		summarizeBy: none
+		sourceColumn: order_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column credit_card_installments
+		dataType: double
+		isHidden
+		lineageTag: d584def1-c364-481c-9286-67888638e1d2
+		summarizeBy: sum
+		sourceColumn: credit_card_installments
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_transactions
+		dataType: double
+		isHidden
+		lineageTag: 955ddbb7-47e7-4db8-8ba4-ffb726029c0e
+		summarizeBy: sum
+		sourceColumn: total_transactions
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column unique_payment_methods
+		dataType: double
+		isHidden
+		lineageTag: 218d25f9-bd8f-4af0-8f18-cceabaaeb930
+		summarizeBy: sum
+		sourceColumn: unique_payment_methods
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column voucher_count_used
+		dataType: double
+		isHidden
+		lineageTag: 3914b1a5-4bde-454e-8dd2-b054ea3254a8
+		summarizeBy: sum
+		sourceColumn: voucher_count_used
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column boleto_count_used
+		dataType: double
+		isHidden
+		lineageTag: f8550cf2-e394-42d2-9871-25ebec8ef1af
+		summarizeBy: sum
+		sourceColumn: boleto_count_used
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column credit_card_amount
+		dataType: double
+		isHidden
+		lineageTag: 7aefe31f-2671-46f9-ac6d-e53cdd421504
+		summarizeBy: sum
+		sourceColumn: credit_card_amount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column boleto_amount
+		dataType: double
+		isHidden
+		lineageTag: 66cf2907-e63d-4c93-be6f-8c3466d49f24
+		summarizeBy: sum
+		sourceColumn: boleto_amount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column voucher_amount
+		dataType: double
+		isHidden
+		lineageTag: c3993798-5a57-4419-aaf2-3beb686c44c2
+		summarizeBy: sum
+		sourceColumn: voucher_amount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column debit_card_amount
+		dataType: double
+		isHidden
+		lineageTag: 8a9e733a-f7bf-4759-8391-9c9a8d3a3170
+		summarizeBy: sum
+		sourceColumn: debit_card_amount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_payment_amount
+		dataType: double
+		isHidden
+		lineageTag: 6029f1ad-fb95-444e-8d9e-dd71eddcb9b7
+		summarizeBy: sum
+		sourceColumn: total_payment_amount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition dimOrderPayment = m
+		mode: import
+		source = ```
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_order_payments_dataset.csv"),[Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"order_id", type text}, {"payment_sequential", Int64.Type}, {"payment_type", type text}, {"payment_installments", Int64.Type}, {"payment_value", Currency.Type}}),
+				    #"Pivoted Column" = Table.Group(
+				    #"Changed Type", 
+				    {"order_id"}, 
+				    {
+				        // Installments & Metrics
+				        {"credit_card_installments", each List.Max(_[payment_installments]), type nullable number},
+				        {"total_transactions", each Table.RowCount(_), type nullable number},
+				        {"unique_payment_methods", each List.Count(List.Distinct(List.Select(_[payment_type], (x) => x <> null and x <> ""))), type nullable number},
+				        
+				        // Method Counters
+				        {"voucher_count_used", each List.Count(List.Select(_[payment_type], (x) => x = "voucher")), type nullable number},
+				        {"boleto_count_used", each List.Count(List.Select(_[payment_type], (x) => x = "boleto")), type nullable number},
+				        
+				        // Pivoted Monetary Sums
+				        {"credit_card_amount", each List.Sum(Table.SelectRows(_, (r) => r[payment_type] = "credit_card")[payment_value]), type nullable number},
+				        {"boleto_amount", each List.Sum(Table.SelectRows(_, (r) => r[payment_type] = "boleto")[payment_value]), type nullable number},
+				        {"voucher_amount", each List.Sum(Table.SelectRows(_, (r) => r[payment_type] = "voucher")[payment_value]), type nullable number},
+				        {"debit_card_amount", each List.Sum(Table.SelectRows(_, (r) => r[payment_type] = "debit_card")[payment_value]), type nullable number}
+				    }
+				),
+				    #"Added Custom" = Table.AddColumn(#"Pivoted Column", "total_payment_amount", each List.Sum({[credit_card_amount], [boleto_amount], [voucher_amount], [debit_card_amount]})),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"total_payment_amount", type number}})
+				in
+				    #"Changed Type1"
+				```
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

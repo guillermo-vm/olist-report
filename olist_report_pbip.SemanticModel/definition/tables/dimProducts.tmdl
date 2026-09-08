@@ -1,0 +1,140 @@
+table dimProducts
+	lineageTag: f58fbcc3-58bc-4045-b7d5-7b33a3ad3856
+
+	column product_id
+		dataType: string
+		lineageTag: 50954b1d-b3c1-41d0-9ac5-39d83b47aa43
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_category_name
+		dataType: string
+		lineageTag: 096739cd-144e-4458-9ba6-554b55a8940a
+		summarizeBy: none
+		sourceColumn: product_category_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name_lenght
+		dataType: int64
+		formatString: 0
+		lineageTag: 18116686-ef7b-4bf6-90b8-e9ccace3ddf9
+		summarizeBy: sum
+		sourceColumn: product_name_lenght
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_description_lenght
+		dataType: int64
+		formatString: 0
+		lineageTag: 3be86322-3d49-4d24-8ea8-82d3ad4f827b
+		summarizeBy: sum
+		sourceColumn: product_description_lenght
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_photos_qty
+		dataType: int64
+		formatString: 0
+		lineageTag: d9f8e760-4f4e-4bbe-b41d-44a170460324
+		summarizeBy: sum
+		sourceColumn: product_photos_qty
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_weight_g
+		dataType: int64
+		isHidden
+		formatString: 0
+		displayFolder: product dimensions
+		lineageTag: 63c53938-062b-4756-984f-9a7c1390bffb
+		summarizeBy: sum
+		sourceColumn: product_weight_g
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_length_cm
+		dataType: int64
+		isHidden
+		formatString: 0
+		displayFolder: product dimensions
+		lineageTag: ac56477c-270e-4bec-ad05-6829ea5cc514
+		summarizeBy: sum
+		sourceColumn: product_length_cm
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_height_cm
+		dataType: int64
+		isHidden
+		formatString: 0
+		displayFolder: product dimensions
+		lineageTag: ddb85328-3675-4c0a-b8c3-38e878718dd7
+		summarizeBy: sum
+		sourceColumn: product_height_cm
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_width_cm
+		dataType: int64
+		isHidden
+		formatString: 0
+		displayFolder: product dimensions
+		lineageTag: 4b331300-e4ca-4f41-a56a-2c92afc1b4b2
+		summarizeBy: sum
+		sourceColumn: product_width_cm
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Volumetric Weight' = (dimProducts[product_length_cm] * dimProducts[product_height_cm] * dimProducts[product_width_cm])/6000
+		formatString: 0.000
+		lineageTag: cfd80914-898f-4212-b9b0-d11ae8243b7c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_weight_kg = dimProducts[product_weight_g]/1000
+		lineageTag: ecedf50e-6ab7-4a6a-9bdf-09080ba33b27
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Billable weight' =
+			IF(
+			    dimProducts[product_weight_kg] >= dimProducts[Volumetric Weight],
+			    dimProducts[product_weight_kg],
+			    dimProducts[Volumetric Weight]
+			)
+		formatString: 0.000
+		lineageTag: e8c3e728-dfa4-4a12-bd38-2c62ac450e6b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dimProducts = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_products_dataset.csv"),[Delimiter=",", Columns=9, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"product_id", type text}, {"product_category_name", type text}, {"product_name_lenght", Int64.Type}, {"product_description_lenght", Int64.Type}, {"product_photos_qty", Int64.Type}, {"product_weight_g", Int64.Type}, {"product_length_cm", Int64.Type}, {"product_height_cm", Int64.Type}, {"product_width_cm", Int64.Type}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type","","otro",Replacer.ReplaceValue,{"product_category_name"})
+				in
+				    #"Replaced Value"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

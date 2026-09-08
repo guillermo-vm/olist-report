@@ -1,0 +1,38 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		fastCombine
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["dimCustomers","dimGeolocation","factSales","dimOrderPayment","factOrderReviews","factOrders","dimProducts","dimSellers","supCategoryEnglishName","dimOrders","_measures","brazilan_states","sellerTiers"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dimCustomers
+ref table factSales
+ref table DateTableTemplate_dc4b4607-2fb7-4dfa-9bfe-7304eeac711f
+ref table LocalDateTable_d1aecbf0-3793-4939-9686-a8f746f312fe
+ref table dimOrderPayment
+ref table factOrderReviews
+ref table LocalDateTable_48dc1bc5-2f5e-461e-8cbe-caa83f66683b
+ref table dimProducts
+ref table dimSellers
+ref table supCategoryEnglishName
+ref table LocalDateTable_02eadb03-f58f-4579-934c-f8bea58cc9f7
+ref table LocalDateTable_6ac14dcd-9143-4a2d-b6a0-31caeca6692c
+ref table LocalDateTable_3fd9b28c-be62-4945-9568-d7b25a93e325
+ref table LocalDateTable_aceacabc-0e28-4683-a908-9c0ab36eb857
+ref table dimOrders
+ref table _measures
+ref table Calendar
+ref table brazilan_states
+ref table sellerTiers
+
+ref cultureInfo en-US
+

@@ -1,0 +1,33 @@
+table sellerTiers
+	lineageTag: 0cbde649-c58d-4f82-a96a-14a41a918dc3
+
+	column Tier
+		dataType: int64
+		formatString: 0
+		lineageTag: 5044a619-8a79-492f-b009-e3b78c9738d7
+		summarizeBy: sum
+		sourceColumn: Tier
+
+		annotation SummarizationSetBy = Automatic
+
+	column tier_name
+		dataType: string
+		lineageTag: c5ecc0b1-a268-46f8-8e41-8192795b9c7c
+		summarizeBy: none
+		sourceColumn: tier_name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition sellerTiers = m
+		mode: import
+		source =
+				let
+				  Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("NcxLCsJAEIThqxS9Dg15nUAXCgqC7oZZaGhjQ5wOnVGv7xBxWx/1h0A1VVQzLjbjLNMkvlCsAjVlbhg7HR84id/Nn5rGldpCLWNjLtjqkl1vr6yWVuwKdoyDff43+QX7Aj3jqIMbzLFP1yHrWyjGLw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Tier = _t, tier_name = _t]),
+				  #"Changed column type" = Table.TransformColumnTypes(Source, {{"Tier", Int64.Type}, {"tier_name", type text}})
+				in
+				  #"Changed column type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

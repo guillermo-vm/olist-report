@@ -1,0 +1,73 @@
+relationship 6681eb8b-05c6-4eb6-88bc-e91f086d2f17
+	joinOnDateBehavior: datePartOnly
+	fromColumn: factSales.shipping_limit_date
+	toColumn: LocalDateTable_d1aecbf0-3793-4939-9686-a8f746f312fe.Date
+
+relationship ae2d3533-8b91-457d-abc7-4afcf65321d9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: factOrderReviews.review_creation_date
+	toColumn: LocalDateTable_48dc1bc5-2f5e-461e-8cbe-caa83f66683b.Date
+
+relationship AutoDetected_d32f91a1-4c04-42c9-866d-d2c4a68d8df6
+	fromColumn: factSales.product_id
+	toColumn: dimProducts.product_id
+
+relationship AutoDetected_6cf1da17-5c7a-4df4-957b-521655a16705
+	fromColumn: factSales.seller_id
+	toColumn: dimSellers.seller_id
+
+relationship c1690233-0896-4321-b280-2556a6fd6f32
+	joinOnDateBehavior: datePartOnly
+	fromColumn: factSales.'factOrders.order_approved_at'
+	toColumn: LocalDateTable_02eadb03-f58f-4579-934c-f8bea58cc9f7.Date
+
+relationship bf730dce-6e90-43ad-a48f-8a271e5f0d9b
+	joinOnDateBehavior: datePartOnly
+	fromColumn: factSales.'factOrders.order_delivered_carrier_date'
+	toColumn: LocalDateTable_6ac14dcd-9143-4a2d-b6a0-31caeca6692c.Date
+
+relationship 33c7f841-9ecd-4243-a9c7-873f60241ba3
+	joinOnDateBehavior: datePartOnly
+	fromColumn: factSales.date_delivered_customer
+	toColumn: LocalDateTable_3fd9b28c-be62-4945-9568-d7b25a93e325.Date
+
+relationship 5e92f03e-d5b1-4e8f-b763-521fa9f0aa07
+	joinOnDateBehavior: datePartOnly
+	fromColumn: factSales.date_estimated_delivery
+	toColumn: LocalDateTable_aceacabc-0e28-4683-a908-9c0ab36eb857.Date
+
+relationship AutoDetected_1b47bfd1-3d44-4296-8ca7-09f9493a9aa2
+	fromColumn: factSales.'factOrders.customer_id'
+	toColumn: dimCustomers.customer_id
+
+relationship AutoDetected_363346ff-0805-4b22-996f-5fa520fa5065
+	fromColumn: factSales.order_id
+	toColumn: dimOrders.order_id
+
+relationship AutoDetected_bc694ab5-da75-40a6-9a53-2254e20464cc
+	isActive: false
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: dimOrderPayment.order_id
+	toColumn: dimOrders.order_id
+
+relationship AutoDetected_a7c68e96-3c35-4ed4-a468-4327ca0fe641
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: factOrderReviews.order_id
+	toColumn: dimOrders.order_id
+
+relationship AutoDetected_0dbc5fe1-99e2-4689-81c2-cef1e73e6975
+	crossFilteringBehavior: bothDirections
+	fromColumn: dimProducts.product_category_name
+	toColumn: supCategoryEnglishName.product_category_name
+
+relationship 6314936a-3ad7-f6cf-913e-9f783fbfeb89
+	isActive: false
+	fromColumn: dimCustomers.customer_state
+	toColumn: brazilan_states.state_code
+
+relationship 42d199a8-e918-08f9-c547-38ccafb56814
+	fromColumn: factSales.datetime_purchase
+	toColumn: Calendar.Date
+

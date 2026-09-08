@@ -1,0 +1,228 @@
+table dimOrders
+	lineageTag: 442df5af-8152-4080-94cb-bed4df7c2011
+
+	measure 'Review Star Count Cross-Filtered' =
+			
+			CALCULATE(
+			    COUNTROWS(dimOrders),
+			    CROSSFILTER(dimOrders[order_id], factSales[order_id], Both)
+			)
+		formatString: 0
+		lineageTag: fda6827d-cf40-4a71-8de0-15d5a15da0a7
+
+	column order_id
+		dataType: string
+		lineageTag: ff9caaea-d6c3-4489-95fc-c74bc1644bd0
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id
+		dataType: string
+		lineageTag: 9ad4a093-59a4-4a65-840c-19613d927bce
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 795cfa28-cfb1-4570-90fd-9c276c5af37b
+		summarizeBy: none
+		sourceColumn: review_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_review
+		dataType: string
+		lineageTag: 3fc8b15c-cec1-403e-880c-5fcd2eb77132
+		summarizeBy: none
+		sourceColumn: date_review
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rating
+		dataType: string
+		lineageTag: c0d4229a-68e6-4b5a-9cfa-98819ef2c5c1
+		summarizeBy: none
+		sourceColumn: Rating
+
+		annotation SummarizationSetBy = Automatic
+
+	column credit_card_installments
+		dataType: double
+		lineageTag: a407b9d8-8f9d-4a80-a305-d22e14bb04fc
+		summarizeBy: none
+		sourceColumn: credit_card_installments
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_transactions
+		dataType: double
+		lineageTag: 72eac986-d07d-4b7a-878b-ef74c0f8e1e7
+		summarizeBy: none
+		sourceColumn: total_transactions
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column unique_payment_methods
+		dataType: double
+		lineageTag: 97b9569e-77b1-4f25-882b-e6fad437b9af
+		summarizeBy: none
+		sourceColumn: unique_payment_methods
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column voucher_count_used
+		dataType: double
+		lineageTag: da870c4d-8786-41cc-817f-1aec09181445
+		summarizeBy: none
+		sourceColumn: voucher_count_used
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column boleto_count_used
+		dataType: double
+		lineageTag: 9ff741a7-f92a-4038-b6d1-8c6c9afd7f5a
+		summarizeBy: none
+		sourceColumn: boleto_count_used
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column credit_card_amount
+		dataType: double
+		lineageTag: aad1c065-ab2a-4908-bc8e-9d902b992b46
+		summarizeBy: none
+		sourceColumn: credit_card_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column boleto_amount
+		dataType: double
+		lineageTag: f4bf8a97-7bb2-4acc-84a2-3d9ec9b1efc3
+		summarizeBy: none
+		sourceColumn: boleto_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column voucher_amount
+		dataType: double
+		lineageTag: dc9c8f47-63b7-4878-b182-12debc82805e
+		summarizeBy: none
+		sourceColumn: voucher_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column debit_card_amount
+		dataType: double
+		lineageTag: 3a5a0ccd-e09c-4325-a77a-8f51b4c562ea
+		summarizeBy: none
+		sourceColumn: debit_card_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_payment_amount
+		dataType: double
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 7b298fe2-6218-41da-8cda-b05f6b12b0ef
+		summarizeBy: none
+		sourceColumn: total_payment_amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column main_payment_method = ```
+			
+			VAR CC = COALESCE ( [credit_card_amount], 0 )
+			VAR Bol = COALESCE ( [boleto_amount], 0 )
+			VAR Vouch = COALESCE ( [voucher_amount], 0 )
+			VAR Debit = COALESCE ( [debit_card_amount], 0 )
+			
+			-- 1. Find the maximum amount paid across all methods
+			VAR MaxAmount = MAXX ( { CC, Bol, Vouch, Debit }, [Value] )
+			
+			-- 2. Count how many payment methods tied for that maximum amount
+			VAR CC_IsMax = IF ( CC = MaxAmount && CC > 0, 1, 0 )
+			VAR Bol_IsMax = IF ( Bol = MaxAmount && Bol > 0, 1, 0 )
+			VAR Vouch_IsMax = IF ( Vouch = MaxAmount && Vouch > 0, 1, 0 )
+			VAR Debit_IsMax = IF ( Debit = MaxAmount && Debit > 0, 1, 0 )
+			
+			VAR MaxCount = CC_IsMax + Bol_IsMax + Vouch_IsMax + Debit_IsMax
+			
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        -- No payment registered / 0 total
+			        MaxAmount = 0, "not_defined",
+			        
+			        -- Exact tie between two or more methods (e.g. $50 CC + $50 Voucher)
+			        MaxCount > 1, "split",
+			        
+			        -- Clear dominant method
+			        CC_IsMax = 1, "credit_card",
+			        Bol_IsMax = 1, "boleto",
+			        Vouch_IsMax = 1, "voucher",
+			        Debit_IsMax = 1, "debit_card",
+			        "not_defined"
+			    )
+			```
+		lineageTag: 51014ab4-c5ad-40da-984f-40fbfa4b0d3e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ticket_Tier =
+			
+			VAR OrderValue = dimOrders[total_payment_amount]
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        OrderValue < 50, "1. Low Ticket (< $50)",
+			        OrderValue <= 200, "2. Medium Ticket ($50-$200)",
+			        "3. High Ticket (> $200)"
+			    )
+		lineageTag: 5181b326-f995-40c7-9d0d-8ee5783b0efc
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dimOrders = m
+		mode: import
+		source =
+				let
+				    Source = factSales,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"order_id", "factOrders.customer_id"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Merged Queries" = Table.NestedJoin(#"Removed Duplicates", {"order_id"}, factOrderReviews, {"order_id"}, "factOrderReviews", JoinKind.LeftOuter),
+				    #"Expanded factOrderReviews" = Table.ExpandTableColumn(#"Merged Queries", "factOrderReviews", {"review_score", "review_creation_date", "Rating"}, {"factOrderReviews.review_score", "factOrderReviews.review_creation_date", "factOrderReviews.Rating"}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Expanded factOrderReviews","","Unrated",Replacer.ReplaceValue,{"factOrderReviews.review_score", "factOrderReviews.review_creation_date", "factOrderReviews.Rating"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Replaced Value",{{"factOrderReviews.Rating", "Rating"}, {"factOrderReviews.review_creation_date", "date_review"}, {"factOrderReviews.review_score", "review_score"}, {"factOrders.customer_id", "customer_id"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"review_score", Int64.Type}}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Changed Type", {"order_id"}, dimOrderPayment, {"order_id"}, "dimOrderPayment", JoinKind.LeftOuter),
+				    #"Expanded dimOrderPayment" = Table.ExpandTableColumn(#"Merged Queries1", "dimOrderPayment", {"credit_card_installments", "total_transactions", "unique_payment_methods", "voucher_count_used", "boleto_count_used", "credit_card_amount", "boleto_amount", "voucher_amount", "debit_card_amount", "total_payment_amount"}, {"credit_card_installments", "total_transactions", "unique_payment_methods", "voucher_count_used", "boleto_count_used", "credit_card_amount", "boleto_amount", "voucher_amount", "debit_card_amount", "total_payment_amount"})
+				in
+				    #"Expanded dimOrderPayment"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

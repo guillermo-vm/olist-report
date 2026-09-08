@@ -1,0 +1,641 @@
+table _measures
+	lineageTag: 9518b713-3409-4f04-bb83-1ced9e11edf9
+
+	measure 'Delivered GMV' =
+			
+			CALCULATE(
+			    SUM(factSales[price]),
+			    factSales[order_status] = "delivered"
+			)
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: bb364865-e35e-4016-9610-03e7906fe90f
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Pipeline Order Value' =
+			
+			
+			CALCULATE(
+			    SUM(factSales[price]),
+			    factSales[order_status] IN {"approved", "processing", "invoiced", "shipped"}
+			)
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: b6a2d6ff-14e1-412c-9bad-3a6fa29409c8
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Gross Merchandise Value' =
+			
+			
+			CALCULATE(
+			    SUM(factSales[price]),
+			    NOT(factSales[order_status] IN {"canceled", "unavailable"})
+			)
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: f26a1a21-a37b-4213-921e-d2fc94ffaf18
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Canceled GMV' = ([Expected Gross Merchandise Value] - [Delivered GMV])
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: 44767e56-e66d-4bca-a90a-dd3dde894fcb
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Total Orders' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT(factSales[order_id]),
+			    NOT(factSales[order_status] in {"canceled", "unavailable"})
+			)
+		formatString: #,0
+		displayFolder: Basic
+		lineageTag: 26089af3-b6ec-4c99-ab10-6decf4a7c326
+
+	measure 'Net Average Order Value' = ```
+			
+			VAR delivered_orders = 
+			
+			CALCULATE(
+			    DISTINCTCOUNT(factSales[order_id]),
+			    factSales[order_status] = "delivered"
+			)
+			RETURN
+			    DIVIDE([Delivered GMV], delivered_orders, 0)
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Financial
+		lineageTag: 2030864f-e098-4994-b6c5-f142e1a102fe
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'On-time Delivery Rate' = ```
+			
+			
+			VAR on_time_delivery_count =
+			    CALCULATE(
+			        DISTINCTCOUNT(factSales[order_id]), 
+			        factSales[order_status] = "delivered",
+			        factSales[date_delivered_customer] <= factSales[date_estimated_delivery]
+			    )
+			
+			VAR total_delivered_orders_count = 
+			    CALCULATE(
+			        DISTINCTCOUNT(factSales[order_id]), 
+			        factSales[order_status] = "delivered"
+			    )
+			
+			RETURN 
+			
+			    DIVIDE(on_time_delivery_count, total_delivered_orders_count, 0)
+			
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Logistics
+		lineageTag: 73ea4729-2cc3-45b3-b638-25ba2e2c6054
+
+	measure 'Average Delivery Days' = ```
+			
+			
+			    AVERAGEX(
+			        FILTER(
+			            factSales,
+			            factSales[order_status] == "delivered"
+			            && factSales[date_delivered_customer] >= factSales[datetime_purchase]
+			            && NOT(ISBLANK(factSales[date_delivered_customer]))
+			            && NOT(ISBLANK(factSales[datetime_purchase]))
+			        ),
+			
+			        DATEDIFF(
+			            factSales[datetime_purchase],
+			            factSales[date_delivered_customer],
+			            DAY
+			        )
+			    )
+			    
+			```
+		lineageTag: 110b044b-c605-4bb1-93ea-222e3b38cf65
+
+		formatStringDefinition = ```
+				VAR _Value = [Average Delivery Days] 
+				RETURN
+				IF(
+				    ISBLANK(_Value),
+				    "0.0"" Days""",
+				    "0.0"" Days"""
+				)
+				```
+
+	measure 'Average Delivery Delay Days' = ```
+			
+			
+			    AVERAGEX(
+			        FILTER(
+			            factSales,
+			            factSales[order_status] == "delivered"
+			            && factSales[date_delivered_customer] > factSales[date_estimated_delivery]
+			            && NOT(ISBLANK(factSales[date_delivered_customer]))
+			            && NOT(ISBLANK(factSales[date_estimated_delivery]))
+			        ),
+			
+			        DATEDIFF(
+			            factSales[date_estimated_delivery],
+			            factSales[date_delivered_customer],
+			            DAY
+			        )
+			    )
+			```
+		lineageTag: 98d3304b-893c-4b3d-96ea-eee81877a15d
+
+		formatStringDefinition = ```
+				VAR _Value = [Average Delivery Days] 
+				RETURN
+				IF(
+				    ISBLANK(_Value),
+				    "0.0"" Days""",
+				    "0.0"" Days"""
+				)
+				```
+
+	measure 'Average Review Rating' = ```
+			
+			    AVERAGE(dimOrders[review_score])
+			```
+		lineageTag: 8c61cd87-1116-480e-b277-d75be1a9cc59
+
+		formatStringDefinition = "0.0"" ★"""
+
+	measure 'Seller Tier' = ```
+			
+			VAR ActiveSellersTable = 
+			    ADDCOLUMNS(
+			        VALUES(dimSellers[seller_id]),
+			        "@LogGMV", LOG10(CALCULATE(SUM(factSales[price])) + 1)
+			    )
+			
+			VAR MeanLogGMV = AVERAGEX(ActiveSellersTable, [@LogGMV])
+			VAR StdDevLogGMV = STDEVX.P(ActiveSellersTable, [@LogGMV])
+			VAR CurrentSellerGMV = SUM(factSales[price])
+			
+			VAR CurrentSellerLogGMV = LOG10(CurrentSellerGMV + 1)
+			VAR ZScore = DIVIDE(CurrentSellerLogGMV - MeanLogGMV, StdDevLogGMV, 0)
+			
+			RETURN
+			    IF(
+			        ISBLANK(CurrentSellerGMV) || CurrentSellerGMV = 0, 
+			        "5. Micro / Inactive Sellers",
+			        SWITCH(
+			            TRUE(),
+			            ZScore > 2.0,   "1. Top sellers (> +2σ)",
+			            ZScore > 1.0,   "2. High Performers (+1σ to +2σ)",
+			            ZScore >= -1.0, "3. Core Distribution (-1σ to +1σ)",
+			            ZScore >= -2.0, "4. Low Performers (-2σ to -1σ)",
+			            "5. Micro / Inactive Sellers"
+			        )
+			    )
+			```
+		displayFolder: Financial
+		lineageTag: 8a8fcbf7-78e3-4336-a321-be4af526e3a5
+
+	measure 'Dynamic Tier GMV' = ```
+			
+			VAR SelectedTier = SELECTEDVALUE(sellerTiers[tier_name])
+			
+			// 1. Get active sellers in current canvas context
+			VAR ActiveSellers = 
+			    ADDCOLUMNS(
+			        VALUES(dimSellers[seller_id]),
+			        "@SellerGMV", CALCULATE(SUM(factSales[price])),
+			        "@LogGMV", LOG10(CALCULATE(SUM(factSales[price])) + 1)
+			    )
+			
+			VAR FilteredActiveSellers = FILTER(ActiveSellers, [@SellerGMV] > 0)
+			
+			// 2. Compute Mean & Standard Deviation dynamically
+			VAR MeanLogGMV = AVERAGEX(FilteredActiveSellers, [@LogGMV])
+			VAR StdDevLogGMV = STDEVX.P(FilteredActiveSellers, [@LogGMV])
+			
+			// 3. Assign dynamic Z-score tiers
+			VAR SellersWithTiers = 
+			    ADDCOLUMNS(
+			        FilteredActiveSellers,
+			        "@AssignedTier", 
+			            VAR Z = DIVIDE([@LogGMV] - MeanLogGMV, StdDevLogGMV, 0)
+			            RETURN
+			                SWITCH(
+			                    TRUE(),
+			                    Z > 2.0,   "1. Top Sellers",
+			                    Z > 1.0,   "2. High Performing",
+			                    Z >= -1.0, "3. Core Distribution",
+			                    Z >= -2.0, "4. Low Performes",
+			                    "5. Micro or Inactive"
+			                )
+			    )
+			
+			// 4. Return GMV to size the funnel
+			RETURN
+			    SUMX(
+			        FILTER(SellersWithTiers, [@AssignedTier] = SelectedTier),
+			        [@SellerGMV]
+			    )
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 72c64ae2-2671-4ee8-ad84-7262d28263d9
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Dynamic Tier Seller Count' = ```
+			
+			VAR SelectedTier = SELECTEDVALUE(sellerTiers[tier_name])
+			
+			// 1. Get active sellers in current canvas context
+			VAR ActiveSellers = 
+			    ADDCOLUMNS(
+			        VALUES(dimSellers[seller_id]),
+			        "@SellerGMV", CALCULATE(SUM(factSales[price])),
+			        "@LogGMV", LOG10(CALCULATE(SUM(factSales[price])) + 1)
+			    )
+			
+			VAR FilteredActiveSellers = FILTER(ActiveSellers, [@SellerGMV] > 0)
+			
+			// 2. Compute Mean & Standard Deviation dynamically
+			VAR MeanLogGMV = AVERAGEX(FilteredActiveSellers, [@LogGMV])
+			VAR StdDevLogGMV = STDEVX.P(FilteredActiveSellers, [@LogGMV])
+			VAR SafeStdDev = IF(ISBLANK(StdDevLogGMV) || StdDevLogGMV = 0, 1, StdDevLogGMV)
+			
+			// 3. Assign dynamic Z-score tiers
+			VAR SellersWithTiers = 
+			    ADDCOLUMNS(
+			        FilteredActiveSellers,
+			        "@AssignedTier", 
+			            VAR Z = DIVIDE([@LogGMV] - MeanLogGMV, SafeStdDev, 0)
+			            RETURN
+			                SWITCH(
+			                    TRUE(),
+			                    Z > 2.0,   "1. Top Sellers",
+			                    Z > 1.0,   "2. High Performing",
+			                    Z >= -1.0, "3. Core Distribution",
+			                    Z >= -2.0, "4. Low Performes",
+			                    "5. Micro or Inactive"
+			                )
+			    )
+			
+			// 4. Return distinct count of sellers in the active tier
+			RETURN
+			    COUNTROWS(
+			        FILTER(SellersWithTiers, [@AssignedTier] = SelectedTier)
+			    )
+			```
+		formatString: #,0
+		lineageTag: 144d70e2-413c-4918-80f4-c6af0a7b666b
+
+	measure 'Net Freight Revenue' = ```
+			
+			    CALCULATE(
+			        SUM(factSales[freight_value]),
+			        factSales[order_status] = "delivered" || factSales[order_status] = "shipped"
+			    )
+			
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Logistics
+		lineageTag: 34368f32-eb35-4430-9b39-80473a4c564c
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Gross Checkout Outlay' = [Gross Merchandise Value] + [Gross Freight Revenue]
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Financial
+		lineageTag: b7d9e07d-3c3b-4ace-9f14-8ce6d7963bd6
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Gross Freight Revenue' = ```
+			
+			    CALCULATE(
+			        SUM(factSales[freight_value]),
+			        NOT( factSales[order_status] IN({"canceled", "unavailable"}) )
+			    )
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Logistics
+		lineageTag: 2064b303-f025-471c-be88-c3dba73e78ac
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Net Settled Payments' = ```
+			
+			    CALCULATE(
+			        SUM(dimOrders[total_payment_amount]),
+			        factSales[order_status] == "delivered"
+			    )
+			```
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Financial
+		lineageTag: 15d483e1-630c-409a-9c12-5f63368390d9
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'In-Transit Payments' =
+			
+			CALCULATE(
+			    SUM(dimOrders[total_payment_amount]),
+			    factSales[order_status] IN {"approved", "processing", "invoiced", "shipped"},
+			    CROSSFILTER(dimOrders[order_id], factSales[order_id], BOTH)
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Financial
+		lineageTag: 4a310d3a-6c01-42fd-958e-bb7638df075c
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Gross Expected Checkout Demand' = ```
+			
+			
+			    CALCULATE(
+			        SUM(factSales[price]) +  SUM(factSales[freight_value]),
+			        NOT( factSales[order_status] IN {"canceled", "unavailable"})
+			    )
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: 3cd3fe18-3df3-4d08-b0d9-4aa30f29cf23
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Collection Payment Rate' = ```
+			
+			VAR net_realized_collected = 
+			    CALCULATE(
+			        SUM(factSales[price]) +  SUM(factSales[freight_value]),
+			        factSales[order_status] = "delivered"
+			    )
+			RETURN
+			    DIVIDE(net_realized_collected, [Gross Expected Checkout Demand])
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Financial
+		lineageTag: 498dd0e6-199c-4b2d-abd2-0811a9b75131
+
+	measure 'Fullfilment Rate %' =
+			
+			DIVIDE([Delivered GMV], [Gross Merchandise Value])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Financial
+		lineageTag: 5b6a6515-3fe1-47b4-86a0-4dd2dee9eaf5
+
+	measure 'Avg Order Freight' =
+			
+			CALCULATE(
+			    AVERAGEX(
+			        DISTINCT(factSales[order_id]),
+			        CALCULATE(SUM(factSales[freight_value]))
+			    ),
+			    factSales[order_status] = "delivered"
+			)
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Logistics
+		lineageTag: b56c15c6-9ffa-481b-b386-7a2aa91913d6
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Canceled Gross Merchandise Value' = [Gross Expected Checkout Demand] - [Gross Merchandise Value]
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: 0deb1759-5651-45ca-b1f8-1e943e72a64a
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Freight Expenses' = ```
+			
+			     CALCULATE(
+			        SUM(factSales[freight_value]),
+			        factSales[order_status] == "delivered"
+			    )
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Logistics
+		lineageTag: 0b1c22f1-fd31-48ef-8256-e3ddc319a779
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Payment Comissions' =
+			
+			CALCULATE(
+			    SUMX(
+			        dimOrders,
+			        (dimOrders[credit_card_amount] * 0.035) +
+			        (dimOrders[boleto_amount]      * 0.015) +
+			        (dimOrders[voucher_amount]     * 0.020) +
+			        (dimOrders[debit_card_amount]       * 0.010)
+			    ),
+			        factSales[order_status] = "delivered",
+			        CROSSFILTER(factSales[order_id], dimOrders[order_id], Both)
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Financial
+		lineageTag: c5f286ce-ab5d-44d3-99c9-95ce9e071d5d
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Olist Net Revenue' = [Delivered GMV]*0.1
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Financial
+		lineageTag: 1bb1ab11-3930-48b3-960c-5469808baf9f
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Net Margin' = [Olist Net Revenue] - [Payment Comissions]
+		displayFolder: Financial
+		lineageTag: 7cc351b7-614c-4d07-a6d4-2f3edbc97912
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Expected Gross Merchandise Value' =
+			
+			
+			CALCULATE(
+			    SUM(factSales[price])
+			)
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: Basic
+		lineageTag: 7fa74031-dcfb-4584-b6fd-c2fd04500081
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Retained Margin' = [Olist Net Revenue] - [Payment Comissions]
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Financial
+		lineageTag: 53168b75-c66f-4c7f-910f-3f86213121e4
+
+	measure 'Seller Payout' = [Delivered GMV]*0.9
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Financial
+		lineageTag: ce004dbb-8c4e-4faf-9678-95c570a4b3cb
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Net Gross Margin Rate' = [Net Margin]/[Olist Net Revenue]
+		displayFolder: Financial
+		lineageTag: 8db1db01-30ae-44d0-bc07-290bb1853bd5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Payment Fee Over Revenue' = DIVIDE([Payment Comissions], [Olist Net Revenue])
+		formatString: #,0.0%;-#,0.0%;#,0.0%
+		displayFolder: Financial
+		lineageTag: e10bc995-a81f-4b38-9f51-f818d9a3b030
+
+	measure 'Pareto category split revenue' = ```
+			
+			
+			VAR revenue_rank = 
+			    RANKX(
+			        ALLSELECTED(dimProducts[product_category_name]),
+			        [Olist Net Revenue],
+			        ,
+			        DESC,
+			        Dense
+			    )
+			
+			
+			
+			```
+		displayFolder: Financial
+		lineageTag: 5096a27c-e1c4-4d96-95b9-a88d8481914f
+
+	measure 'Top Category Name Margin' = ```
+			
+			CALCULATE(
+			    SELECTEDVALUE(supCategoryEnglishName[Product Category English]),
+			    TOPN(
+			        1, 
+			        ALLSELECTED(supCategoryEnglishName[Product Category English]), 
+			        [Net Margin], 
+			        DESC
+			    )
+			)
+			```
+		lineageTag: 5841d8bb-2b7a-405a-b0e7-4a771ca824c2
+
+	measure '10 Category Rank Colornet margin' = ```
+			
+			VAR CategoryRank = 
+			    RANKX(
+			        ALLSELECTED(supCategoryEnglishName[Product Category English]),
+			        [Net Margin],
+			        ,
+			        DESC,
+			        Dense
+			    )
+			RETURN
+			    SWITCH(
+			        CategoryRank,
+			        1,  "#0542E6", -- Rank 1 (Highest Margin)
+			        2,  "#2862EE",
+			        3,  "#4A82F6",
+			        4,  "#6F9CFA",
+			        5,  "#94B5FF",
+			        6,  "#BAAAEA",
+			        7,  "#E0A172",
+			        8,  "#DD864C",
+			        9,  "#D96B27",
+			        10, "#B04610", -- Rank 10
+			        BLANK()       -- Categories outside Top 10 stay uncolored
+			    )
+			```
+		displayFolder: Formatting
+		lineageTag: a3d0e8e5-1863-48fd-9bab-f01f4e16c9cf
+
+	measure 'Billable Weight Penalty Rate' = ```
+			
+			    DIVIDE(
+			        CALCULATE(
+			            COUNTROWS(factSales),
+			            dimProducts[Volumetric Weight] >= dimProducts[product_weight_kg]
+			        ),
+			        COUNTROWS(factSales),
+			        0
+			        
+			    )
+			
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Logistics
+		lineageTag: e2fbe91e-deba-47bc-b408-1665ecb577d2
+
+	measure on_time_delivery_count = ```
+			
+			    CALCULATE(
+			        DISTINCTCOUNT(factSales[order_id]), 
+			        factSales[order_status] = "delivered",
+			        factSales[date_delivered_customer] <= factSales[date_estimated_delivery]
+			    )
+			```
+		formatString: #,0
+		lineageTag: 84d905bc-07fa-4fcc-a052-0067ffb75866
+
+	measure delayed_delivery_count = ```
+			
+			    CALCULATE(
+			        DISTINCTCOUNT(factSales[order_id]), 
+			        factSales[order_status] = "delivered",
+			        factSales[date_delivered_customer] > factSales[date_estimated_delivery]
+			    )
+			```
+		formatString: #,0
+		lineageTag: d70650d5-f01b-438e-80b6-71e85a62d79f
+
+	measure 'Active Clients' = DISTINCTCOUNT(dimCustomers[customer_id])
+		formatString: #,0
+		displayFolder: Marketing
+		lineageTag: f3feb8f8-6250-4a44-866c-3151e60f51f6
+
+	measure 'Active Sellers' = DISTINCTCOUNT(dimSellers[seller_id])
+		formatString: #,0
+		displayFolder: Marketing
+		lineageTag: ecf21e95-3bcc-4be3-a38a-7036461c355b
+
+	measure 'Repeat Purchase Rate' =
+			DIVIDE(
+			    [Repeat Purchase],
+			    DISTINCTCOUNT(dimCustomers[customer_id]),
+			    0
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Marketing
+		lineageTag: 4cd16d75-e222-4cc9-9735-8ad39c05e633
+
+	measure 'Repeat Purchase' = ```
+			
+			COUNTROWS(
+			    FILTER(
+			        VALUES(dimCustomers[customer_unique_id]),
+			        CALCULATE(DISTINCTCOUNT(factSales[order_id])) > 1
+			    )
+			)
+			
+			```
+		formatString: #,0
+		displayFolder: Marketing
+		lineageTag: cb68df48-c34c-464d-ad3a-838aa32d7e9b
+
+	partition _measures = m
+		mode: import
+		source =
+				let
+				  Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"Column1"})
+				in
+				  #"Removed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

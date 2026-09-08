@@ -1,0 +1,28 @@
+expression factOrders =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_orders_dataset.csv"),[Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"order_id", type text}, {"customer_id", type text}, {"order_status", type text}, {"order_purchase_timestamp", type datetime}, {"order_approved_at", type datetime}, {"order_delivered_carrier_date", type datetime}, {"order_delivered_customer_date", type datetime}, {"order_estimated_delivery_date", type datetime}})
+		in
+		    #"Changed Type"
+	lineageTag: fb2ed125-4e35-43d7-9071-51dd9522c8bc
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression dimGeolocation =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_geolocation_dataset.csv"),[Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"geolocation_zip_code_prefix", Int64.Type}, {"geolocation_lat", type number}, {"geolocation_lng", type number}, {"geolocation_city", type text}, {"geolocation_state", type text}}),
+		    #"Grouped Rows" = Table.Group(#"Changed Type", {"geolocation_zip_code_prefix"}, {{"geolocation_lat", each List.Median([geolocation_lat]), type nullable number}, {"geolocation_lng", each List.Median([geolocation_lng]), type nullable number}, {"geolocation_state", each List.Mode([geolocation_state]), type nullable text}, {"geolocation_city", each List.Mode([geolocation_city]), type nullable text}}),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Grouped Rows",{{"geolocation_zip_code_prefix", type text}})
+		in
+		    #"Changed Type1"
+	lineageTag: 0ef1ba7c-e0dc-42ae-8d07-75b5ef3f7e3c
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

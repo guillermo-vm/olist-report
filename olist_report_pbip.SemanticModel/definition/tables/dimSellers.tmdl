@@ -1,0 +1,71 @@
+table dimSellers
+	lineageTag: 6caa3f6b-3815-40e2-8a26-0d17e6fad806
+
+	column seller_id
+		dataType: string
+		lineageTag: d84fef53-6d06-41e7-bde5-fb9fdb9029e2
+		summarizeBy: none
+		sourceColumn: seller_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_zip_code_prefix
+		dataType: string
+		lineageTag: 88007683-d001-4013-908f-7ea744a11495
+		summarizeBy: none
+		sourceColumn: seller_zip_code_prefix
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_city
+		dataType: string
+		lineageTag: a56802e5-07d4-4fc0-8049-78423438a429
+		summarizeBy: none
+		sourceColumn: seller_city
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_state
+		dataType: string
+		lineageTag: c952bc88-b678-4460-ac65-afae6a8baf67
+		summarizeBy: none
+		sourceColumn: seller_state
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'dimGeolocation.geolocation_lat'
+		dataType: double
+		lineageTag: 4617c95b-e047-4e87-851a-c90c46e464c7
+		summarizeBy: none
+		sourceColumn: dimGeolocation.geolocation_lat
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'dimGeolocation.geolocation_lng'
+		dataType: double
+		lineageTag: 627421a1-0040-4c0e-9cc9-28372dc73090
+		summarizeBy: none
+		sourceColumn: dimGeolocation.geolocation_lng
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition dimSellers = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\guill\OneDrive\Desktop\PL300\olist overnight project\Data\olist_sellers_dataset.csv"),[Delimiter=",", Columns=4, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"seller_id", type text}, {"seller_zip_code_prefix", type text}, {"seller_city", type text}, {"seller_state", type text}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type", {"seller_zip_code_prefix"}, dimGeolocation, {"geolocation_zip_code_prefix"}, "dimGeolocation", JoinKind.LeftOuter),
+				    #"Expanded dimGeolocation" = Table.ExpandTableColumn(#"Merged Queries", "dimGeolocation", {"geolocation_lat", "geolocation_lng"}, {"dimGeolocation.geolocation_lat", "dimGeolocation.geolocation_lng"})
+				in
+				    #"Expanded dimGeolocation"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
